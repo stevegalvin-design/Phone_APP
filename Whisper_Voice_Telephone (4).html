@@ -1,0 +1,407 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#150b2b">
+<title>Whisper — Voice Telephone</title>
+<style>
+:root{--bg:#150b2b;--card:#221343;--card2:#2d1a57;--ink:#f6f1ff;--muted:#a899d6;
+--accent:#ff3d7f;--accent2:#8b5cf6;--ok:#3ddc97;--rec:#ff3b3b;--line:#3a2a68}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+ overscroll-behavior:none;touch-action:manipulation}
+#app{height:100dvh;display:flex;flex-direction:column}
+.screen{flex:1;display:flex;flex-direction:column;padding:18px;overflow-y:auto}
+.center{justify-content:center;align-items:center;text-align:center}
+h1{font-size:1.9rem;margin:0 0 6px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+ -webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900;letter-spacing:-.5px}
+p{margin:0 0 10px;line-height:1.45;color:var(--muted)}
+.small{font-size:.85rem}
+.btn{display:block;width:100%;padding:17px;border:0;border-radius:16px;font:inherit;font-size:1.05rem;
+ font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
+ cursor:pointer;margin:9px 0;min-height:56px}
+.btn:active{transform:scale(.985)}
+.btn.alt{background:var(--card2);color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.btn.ghost{background:transparent;color:var(--muted);font-weight:700;box-shadow:none;min-height:44px;font-size:.95rem}
+.btn.sm{padding:12px;font-size:.95rem;min-height:48px}
+.btn.rec{background:linear-gradient(135deg,#ff3b3b,#b91c1c)}
+.btn.play{background:linear-gradient(135deg,var(--accent2),var(--accent))}
+.btn:disabled{opacity:.45}
+input[type=text]{width:100%;padding:15px;border-radius:14px;border:2px solid var(--line);background:var(--card);
+ color:var(--ink);font:inherit;font-size:1.05rem;min-height:54px}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+.pill{display:inline-block;padding:6px 12px;border-radius:999px;background:var(--card2);color:var(--muted);
+ font-size:.78rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px}
+.prompt{background:var(--card);border-radius:18px;padding:20px;font-size:1.3rem;font-weight:800;line-height:1.35;
+ margin:6px 0 14px;border:1px solid var(--line)}
+.msg{background:var(--card2);border-radius:14px;padding:14px;font-weight:700;margin:10px 0;font-size:.98rem}
+.msg.ok{background:#0f3a2b;color:var(--ok)}.msg.bad{background:#3d1220;color:#ff8fa8}
+.names{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.name{background:var(--card2);border:2px solid var(--line);border-radius:999px;padding:10px 16px;font-weight:800;font-size:.95rem}
+.name b{color:#ff8fa8;cursor:pointer;margin-left:6px}
+.tiers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.tier{padding:14px 8px;border-radius:14px;background:var(--card);border:2px solid var(--line);text-align:center;
+ font-weight:800;font-size:.9rem;cursor:pointer}
+.tier.on{border-color:var(--accent);background:var(--card2)}
+.tier small{display:block;font-weight:600;font-size:.7rem;color:var(--muted);margin-top:3px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.opt{padding:14px 10px;border-radius:14px;background:var(--card);border:2px solid var(--line);text-align:center;
+ font-weight:800;font-size:.92rem;cursor:pointer}
+.opt.on{border-color:var(--accent);background:var(--card2)}
+/* pass */
+.pass{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:30px 20px}
+.pass .who{font-size:2.1rem;font-weight:900;background:linear-gradient(90deg,var(--accent),var(--accent2));
+ -webkit-background-clip:text;background-clip:text;color:transparent;margin:8px 0}
+/* recorder */
+.micwrap{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px}
+.mic{width:150px;height:150px;border-radius:50%;background:var(--card2);border:4px solid var(--line);
+ display:flex;align-items:center;justify-content:center;font-size:3.4rem;cursor:pointer;margin:14px 0;transition:.15s}
+.mic.live{background:linear-gradient(135deg,var(--rec),#7f1d1d);border-color:var(--rec);animation:pulse 1.1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #ff3b3b88}70%{box-shadow:0 0 0 22px #ff3b3b00}100%{box-shadow:0 0 0 0 #ff3b3b00}}
+.big{font-size:2.8rem;font-weight:900;letter-spacing:1px}
+.levels{display:flex;gap:5px;align-items:flex-end;height:60px;margin:14px 0}
+.levels i{width:9px;background:var(--accent2);border-radius:4px;height:6px;transition:height .08s}
+.played{font-size:.95rem;font-weight:800;color:var(--muted)}
+.chain{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.link{background:var(--card);border-radius:14px;padding:12px;border:1px solid var(--line);
+ display:flex;align-items:center;gap:12px}
+.link .who{font-weight:800;font-size:.95rem;flex:1}
+.link .len{color:var(--muted);font-size:.8rem;font-weight:700}
+.link.now{border-color:var(--accent);box-shadow:0 0 0 2px #ff3d7f44}
+.hidden{display:none!important}
+</style></head>
+<body><div id="app"></div>
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function showErr(m){
+  var d=document.createElement("div");
+  d.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#b3261e;color:#fff;"
+   +"padding:12px;border-radius:10px;font:14px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;word-break:break-word";
+  d.textContent="Whisper error: "+m;
+  document.body.appendChild(d);
+  setTimeout(function(){ try{document.body.removeChild(d)}catch(e){} }, 9000);
+}
+window.onerror=function(msg,src,line){ showErr(msg+" (line "+line+")"); };
+function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p||35); }catch(e){} }
+
+/* ============ PROMPT DECK ============ */
+var PROMPTS={
+ mild:[
+  "the cat is asleep on the good chair",
+  "we are out of milk again",
+  "the party starts at eight on Saturday",
+  "my phone is at eleven percent",
+  "there is a spider in the bathroom",
+  "the train was late by twenty minutes",
+  "I left the keys in the kitchen drawer",
+  "the neighbour is mowing his lawn again",
+  "we should book the tickets tonight",
+  "she said the soup needed more salt",
+  "the doctor wants to see you on Tuesday",
+  "I think it is going to rain later",
+  "the dog ate the last of the bread",
+  "he is bringing his brother to dinner",
+  "the wifi password is on the fridge"
+ ],
+ ridiculous:[
+  "a nervous pigeon wearing a tiny hat is running for mayor",
+  "the wedding cake told me it was lying about the venue",
+  "two raccoons are running a lemonade stand on the motorway",
+  "the goldfish has applied for a mortgage and got approved",
+  "a very confident squirrel has taken over the staff meeting",
+  "the birthday party has no birthday person and nobody noticed",
+  "the cat has just been elected and wants a bigger office",
+  "the horse is reviewing its own tax return at the kitchen table",
+  "the toaster has opinions about the bread and will not share them",
+  "three ducks are arguing about a parking spot in the rain",
+  "the dog believes it is a professional chef with a Michelin star",
+  "the hamster is chairing a very serious business meeting",
+  "the penguin has forgotten its own name and is being brave about it",
+  "the llama is directing traffic and doing a better job than the police",
+  "the goat has eaten the wedding invitation and is unrepentant"
+ ],
+ unhinged:[
+  "the raccoon is confessing to a crime it did not commit and getting the details wrong",
+  "the wedding cake has been drinking and will not say where the groom is",
+  "two pigeons are in a bitter divorce over a single chip",
+  "the horse is explaining why it is banned from the school again",
+  "the goose has a criminal record and absolutely no regrets about it",
+  "the hamster has faked its own death twice this year for attention",
+  "the cat has stolen a car and is genuinely enjoying the freedom",
+  "the lawyer is one very tall rat in a very small suit",
+  "the squirrel owes money to everyone at this table and knows it",
+  "the flamingo keeps calling everyone the wrong name on purpose",
+  "the crocodile insists it is a service animal and will not be moved",
+  "the robot has just realised it is inside a game and is upset",
+  "the llama will not stop talking about the incident at the barbecue",
+  "the shark has been banned from three pools and wants to explain",
+  "the pigeon is selling timeshares at your own funeral"
+ ]
+};
+
+/* ============ STATE ============ */
+var G={ names:[], order:[], chain:[], tier:"ridiculous", maxHops:15,
+ waitFirst:25, waitAfter:12, mode:"app", replays:0, firstWhisper:false };
+function lsGet(k){ try{ return window.localStorage?window.localStorage.getItem(k):null; }catch(e){ return null; } }
+function lsSet(k,v){ try{ if(window.localStorage) window.localStorage.setItem(k,v); }catch(e){} }
+function lsDel(k){ try{ if(window.localStorage) window.localStorage.removeItem(k); }catch(e){} }
+try{ var sv=lsGet("whisper_v1"); if(sv) G=Object.assign(G,JSON.parse(sv)); }catch(e){}
+function save(){ lsSet("whisper_v1", JSON.stringify(G)); }
+function wipe(){ lsDel("whisper_v1"); }
+function deal(){ var d=PROMPTS[G.tier]||PROMPTS.ridiculous; return d[Math.floor(Math.random()*d.length)]; }
+function pname(i){ return G.order[i % G.order.length] || ("Player "+(i+1)); }
+
+/* ============ SETUP ============ */
+function must(id){ var e=$(id); if(!e) showErr("missing element "+id); return e; }
+function setup(){
+ var h='<div class="screen"><div><h1>WHISPER</h1>'
+ +'<p class="small">One phone. Somebody whispers a sentence into it. It gets passed around. By the end nobody knows what was said.</p></div>'
+ +'<div class="pill">1 &middot; Players</div>'
+ +'<input type="text" id="nameIn" placeholder="Type a name, then Add" autocomplete="off">'
+ +'<button class="btn alt sm" id="addName">Add player</button><div class="names" id="nameList"></div>'
+ +'<div class="pill">2 &middot; The first sentence</div>'
+ +'<div class="opts" id="modeBox">'
+  +'<div class="opt'+(G.mode==="app"?" on":"")+'" data-m="app">App suggests it<small style="display:block;font-weight:600;font-size:.72rem;color:var(--muted);margin-top:4px">ready-made prompt</small></div>'
+  +'<div class="opt'+(G.mode==="self"?" on":"")+'" data-m="self">First player whispers<small style="display:block;font-weight:600;font-size:.72rem;color:var(--muted);margin-top:4px">their own sentence</small></div>'
+ +'</div>'
+ +'<div id="tierWrap" class="'+(G.mode==="app"?"":"hidden")+'"><div class="pill">3 &middot; How rude</div>'
+ +'<div class="tiers" id="tiers">'
+  +'<div class="tier'+(G.tier==="mild"?" on":"")+'" data-t="mild">Mild<small>family safe</small></div>'
+  +'<div class="tier'+(G.tier==="ridiculous"?" on":"")+'" data-t="ridiculous">Ridiculous<small>the usual</small></div>'
+  +'<div class="tier'+(G.tier==="unhinged"?" on":"")+'" data-t="unhinged">Unhinged<small>adults only</small></div>'
+ +'</div></div>'
+ +'<div class="pill">4 &middot; Listening</div>'
+ +'<div class="opts" id="repBox">'
+  +'<div class="opt'+(G.replays===0?" on":"")+'" data-r="0">Hear it once<small style="display:block;font-weight:600;font-size:.72rem;color:var(--muted);margin-top:4px">the real game</small></div>'
+  +'<div class="opt'+(G.replays===1?" on":"")+'" data-r="1">One replay<small style="display:block;font-weight:600;font-size:.72rem;color:var(--muted);margin-top:4px">loud bars</small></div>'
+ +'</div>'
+ +'<div id="sMsg" class="msg hidden"></div>'
+ +'<button class="btn" id="startBtn">Start whispering</button>'
+ +'<p class="small" style="margin-top:12px">3 to 12 players. '+G.maxHops+' hops per chain. Recordings never leave this phone.</p></div>';
+ $("app").innerHTML=h;
+ $("addName").onclick=addName;
+ $("nameIn").addEventListener("keydown",function(e){ if(e.key==="Enter") addName(); });
+ var mb=document.querySelectorAll("#modeBox .opt");
+ for(var i=0;i<mb.length;i++){ mb[i].onclick=function(){ G.mode=this.dataset.m; save();
+  for(var j=0;j<mb.length;j++) mb[j].classList.remove("on"); this.classList.add("on");
+  $("tierWrap").className=(G.mode==="app")?"":"hidden"; }; }
+ var tb=document.querySelectorAll("#tiers .tier");
+ for(var k=0;k<tb.length;k++){ tb[k].onclick=function(){ G.tier=this.dataset.t; save();
+  for(var m=0;m<tb.length;m++) tb[m].classList.remove("on"); this.classList.add("on"); }; }
+ var rb=document.querySelectorAll("#repBox .opt");
+ for(var n=0;n<rb.length;n++){ rb[n].onclick=function(){ G.replays=Number(this.dataset.r); save();
+  for(var p=0;p<rb.length;p++) rb[p].classList.remove("on"); this.classList.add("on"); }; }
+ $("startBtn").onclick=start;
+ renderNames();
+}
+function renderNames(){
+ var h=""; for(var i=0;i<G.names.length;i++) h+='<span class="name">'+esc(G.names[i])+'<b data-rm="'+i+'">&times;</b></span>';
+ $("nameList").innerHTML=h;
+ var rm=document.querySelectorAll("[data-rm]");
+ for(var j=0;j<rm.length;j++){ rm[j].onclick=function(){ G.names.splice(Number(this.dataset.rm),1); save(); renderNames(); }; }
+}
+function addName(){
+ var v=$("nameIn").value.trim(); if(!v) return;
+ if(G.names.length>=12){ sm("Twelve is plenty for one phone.","bad"); return; }
+ G.names.push(v); $("nameIn").value=""; save(); renderNames();
+}
+function sm(t,c){ var e=$("sMsg"); if(e){ e.className="msg"+(c?" "+c:""); e.textContent=t; e.classList.remove("hidden"); } }
+
+/* ============ AUDIO ============ */
+var rec=null, chunks=[], stream=null, levelRAF=null, ac=null, analyser=null;
+function startRec(cb, seconds){
+ navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+  stream=s; chunks=[]; rec=new MediaRecorder(s);
+  rec.ondataavailable=function(e){ if(e.data.size) chunks.push(e.data); };
+  rec.onstop=function(){
+   var blob=new Blob(chunks,{type:chunks[0]?chunks[0].type:"audio/webm"});
+   stopMeter();
+   try{ s.getTracks().forEach(function(t){t.stop()}); }catch(e){}
+   cb(URL.createObjectURL(blob), blob);
+  };
+  try{ ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+   var src=ac.createMediaStreamSource(s); analyser=ac.createAnalyser(); analyser.fftSize=64;
+   src.connect(analyser); }catch(e){ analyser=null; }
+  rec.start();
+  if(seconds) autoStop=setTimeout(function(){ if(rec&&rec.state==="recording") rec.stop(); }, seconds*1000);
+ }, function(err){
+  cb(null,null,String(err&&err.name||"mic"));
+ });
+}
+var autoStop=null;
+function stopRec(){ if(autoStop) clearTimeout(autoStop); if(rec&&rec.state==="recording") rec.stop(); }
+function stopMeter(){ if(levelRAF) cancelAnimationFrame(levelRAF); levelRAF=null; }
+
+/* ============ FLOW ============ */
+function start(){
+ if(G.names.length<2){ sm("Add at least two players. Three or more is better.","bad"); return; }
+ if(!navigator.mediaDevices||!window.MediaRecorder){
+  sm("This browser cannot record audio. Try Chrome, Edge or Safari on a phone or laptop.","bad"); return; }
+ G.order=G.names.slice();
+ for(var i=G.order.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=G.order[i]; G.order[i]=G.order[j]; G.order[j]=t; }
+ G.chain=[];
+ var useApp = (G.mode==="app");
+ G.chain.push({player:pname(0), url:null, blob:null, prompt:useApp?deal():null, self: !useApp, secs:0});
+ save();
+ passTo(0, function(){ firstTurn(); });
+}
+function passTo(idx, then){
+ var name=pname(idx);
+ $("app").innerHTML='<div class="pass"><div class="pill">Pass the phone</div>'
+ +'<div class="who">'+esc(name)+'</div>'
+ +'<p class="small">Hop '+(G.chain.length)+' of '+G.maxHops+'. Nobody else listen in.</p>'
+ +'<button class="btn" id="imBtn">I am '+esc(name)+'</button>'
+ +'<div id="pMsg" class="msg hidden"></div></div>';
+ buzz(70);
+ $("imBtn").onclick=function(){ buzz(20); then(); };
+}
+/* first turn: hear the prompt (or make one up), then whisper it */
+function firstTurn(){
+ var e=G.chain[G.chain.length-1];
+ if(e.prompt){
+  $("app").innerHTML='<div class="screen center"><div class="pill">Your secret sentence</div>'
+  +'<div class="prompt">'+esc(e.prompt)+'</div>'
+  +'<p class="small">Read it once, quietly. Then whisper it into the phone. Do not show anyone this screen.</p>'
+  +'<button class="btn" id="okBtn">I have read it</button></div>';
+  $("okBtn").onclick=function(){ recordTurn(true); };
+ } else {
+  $("app").innerHTML='<div class="screen center"><div class="pill">Make up a sentence</div>'
+  +'<p>Keep it short and a bit odd. Specific detail is what makes the chain funny.</p>'
+  +'<button class="btn" id="okBtn">Ready to whisper</button></div>';
+  $("okBtn").onclick=function(){ recordTurn(false); };
+ }
+}
+function recordTurn(isFirst){
+ var limit=isFirst?G.waitFirst:G.waitAfter;
+ $("app").innerHTML='<div class="screen"><div class="micwrap">'
+ +'<div class="pill">'+(isFirst?"Whisper it now":"Say what you heard")+'</div>'
+ +'<div class="mic" id="micBtn">&#127908;</div>'
+ +'<div class="big" id="clock">'+limit+'s</div>'
+ +'<div class="levels" id="levels">'+Array(9).join("<i></i>")+'</div>'
+ +'<p class="small" id="hint">Tap the microphone to start recording. Tap again to finish.</p>'
+ +'<div id="rMsg" class="msg hidden"></div>'
+ +'</div></div>';
+ var live=false, left=limit, tick=null;
+ var mic=$("micBtn"), clock=$("clock");
+ function paintLevels(){
+  if(!analyser){ levelRAF=requestAnimationFrame(paintLevels); return; }
+  var d=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(d);
+  var bars=document.querySelectorAll("#levels i");
+  for(var i=0;i<bars.length;i++){
+   var v=d[i*2]||0; bars[i].style.height=Math.max(6,Math.min(56,v*0.55))+"px";
+  }
+  levelRAF=requestAnimationFrame(paintLevels);
+ }
+ function begin(){
+  live=true; mic.classList.add("live"); left=limit; clock.textContent=left+"s";
+  $("hint").textContent="Recording. Tap the microphone again when you are done.";
+  buzz(30);
+  startRec(function(url, blob, err){
+   if(err){ live=false; mic.classList.remove("live"); clock.textContent="--";
+    var m=$("rMsg"); m.className="msg bad";
+    m.textContent = err==="NotAllowedError" ? "The microphone was blocked. Allow microphone access for this page, then try again."
+      : err==="NotFoundError" ? "No microphone found on this device."
+      : "Recording failed ("+esc(err)+"). Try again.";
+    m.classList.remove("hidden"); return; }
+   var e=G.chain[G.chain.length-1];
+   e.url=url; e.blob=blob; e.secs=limit-left;
+   save(); buzz(25);
+   if(G.chain.length>=G.maxHops) return reveal();
+   G.chain.push({player:pname(G.chain.length), url:null, blob:null, prompt:null, self:false, secs:0});
+   save();
+   passTo(G.chain.length-1, function(){ listenTurn(); });
+  }, limit);
+  paintLevels();
+  tick=setInterval(function(){
+   left--; clock.textContent=Math.max(0,left)+"s";
+   if(left<=5) clock.style.color="#ff6b6b";
+   if(left<=0){ clearInterval(tick); finish(); }
+  },1000);
+ }
+ function finish(){
+  live=false; mic.classList.remove("live"); if(tick) clearInterval(tick);
+  stopRec(); stopMeter();
+ }
+ mic.onclick=function(){ if(!live) begin(); else finish(); };
+}
+/* every later turn: listen to the previous clip, then record your version */
+function listenTurn(){
+ var prev=G.chain[G.chain.length-2];
+ var played=0, allowed=1+G.replays;
+ $("app").innerHTML='<div class="screen center"><div class="pill">Listen carefully</div>'
+ +'<p class="small">This is what the last person said. Nothing else.</p>'
+ +'<button class="btn play" id="playBtn">Play the whisper</button>'
+ +'<div class="played" id="playedTxt">You may listen '+allowed+(allowed===1?" time":" times")+'</div>'
+ +'<audio id="au" preload="auto"></audio>'
+ +'<button class="btn" id="nextBtn" disabled>Now say what you heard</button></div>';
+ var au=$("au");
+ au.onended=function(){
+  played++;
+  $("playedTxt").textContent = played>=allowed ? "That was your last listen." : "You may listen "+(allowed-played)+" more.";
+  if(played>=allowed){ $("playBtn").disabled=true; $("playedTxt").textContent="That was your last listen."; }
+  $("nextBtn").disabled=false;
+  if(played===1) $("nextBtn").disabled=false;
+ };
+ $("playBtn").onclick=function(){
+  if(played>=allowed) return;
+  au.src=prev.url;
+  var pr=au.play();
+  if(pr&&pr.catch) pr.catch(function(){ /* some browsers need the second tap */ });
+ };
+ $("nextBtn").onclick=function(){ recordTurn(false); };
+}
+/* ============ REVEAL ============ */
+function reveal(){
+ var hops=G.chain.filter(function(e){return e.url}).length;
+ var total=G.chain.reduce(function(a,e){return a+(e.secs||0)},0);
+ $("app").innerHTML='<div class="screen"><h1>THE DAMAGE</h1>'
+ +'<p class="small">Every version, in order, starting with the original. Play them back to back.</p>'
+ +'<div class="msg ok"><b>'+hops+' hops</b> &middot; '+total+' seconds of audio<br>'
+ +'<span class="small">Listen to how far it travelled.</span></div>'
+ +'<button class="btn play" id="reelBtn">Play the whole reel</button>'
+ +'<div class="played" id="reelTxt"></div>'
+ +'<div class="chain" id="chainBox"></div>'
+ +'<button class="btn" id="againBtn">New chain, same players</button>'
+ +'<button class="btn ghost" id="setupBtn">Change players or settings</button></div>';
+ var h="";
+ for(var i=0;i<G.chain.length;i++){
+  var e=G.chain[i];
+  h+='<div class="link" data-i="'+i+'"><div class="who">'+(i===0?"The original &mdash; ":"")+esc(e.player)+'</div>'
+   +'<div class="len">'+(e.secs||0)+'s</div>'
+   +'<button class="btn sm" style="width:auto;padding:10px 16px" data-play="'+i+'">Play</button></div>';
+ }
+ $("chainBox").innerHTML=h;
+ var bp=document.querySelectorAll("[data-play]");
+ for(var b=0;b<bp.length;b++){ bp[b].onclick=function(){ playOne(Number(this.dataset.play)); }; }
+ var idx=0;
+ function playOne(i){
+  var e=G.chain[i]; if(!e.url) return;
+  var au=new Audio(e.url);
+  var links=document.querySelectorAll(".link");
+  for(var l=0;l<links.length;l++) links[l].classList.remove("now");
+  if(links[i]) links[i].classList.add("now");
+  au.onended=function(){
+   if(links[i]) links[i].classList.remove("now");
+   if(idx>0){ idx++; if(idx<G.chain.length){ $("reelTxt").textContent="Playing "+(idx+1)+" of "+G.chain.length; playOne(idx); } 
+    else { $("reelTxt").textContent="That was the whole thing."; idx=0; } }
+  };
+  au.play();
+ }
+ $("reelBtn").onclick=function(){ idx=1; $("reelTxt").textContent="Playing 2 of "+G.chain.length; playOne(0); };
+ $("againBtn").onclick=function(){ wipe(); G.chain=[]; start(); };
+ $("setupBtn").onclick=function(){ wipe(); G.chain=[]; setup(); };
+}
+window.__state=function(){return G};
+window.__setup=setup; window.__start=start;
+if(G.chain.length>1 && G.names.length>1 && G.chain[G.chain.length-1].url){ 
+ $("app").innerHTML='<div class="screen center"><h1>WHISPER</h1><p>A chain is already in progress on this phone.</p>'
+ +'<button class="btn" id="resBtn">Look at it</button><button class="btn ghost" id="newBtn">Start fresh</button></div>';
+ $("resBtn").onclick=reveal; $("newBtn").onclick=function(){ wipe(); G.chain=[]; setup(); };
+} else { setup(); }
+})();
+</script></body></html>
